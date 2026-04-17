@@ -2,7 +2,7 @@
 
 A RAG-powered personal knowledge assistant that answers questions from your own documents using a LangGraph agent pipeline and ChromaDB vector store.
 
-Built as an AI Showcase project during AI Devs 4 — a 5-week hands-on LLM engineering course.
+A portfolio project demonstrating production-grade LLM engineering patterns.
 
 ## What it does
 
@@ -106,7 +106,7 @@ ai-research-assistant/
 
 - [x] RAG foundation — ChromaDB ingestion + similarity retrieval
 - [x] LangGraph 3-node agent — retrieve → analyze → respond
-- [ ] Function calling + conditional routing (tool-mediated retrieval loop)
+- [x] Function calling + conditional routing (tool-mediated retrieval loop)
 - [ ] MCP server — JSON-RPC 2.0 + STDIO, exposes `search_documents` + `summarize_text`
 - [ ] Langfuse observability — token tracking, latency, cost per request
 - [ ] Claude Desktop integration — query your notes from Claude UI
