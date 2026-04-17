@@ -17,6 +17,9 @@ wheels/
 # ChromaDB persistent data
 chroma_data/
 
+# Document corpus (add your own .md files here)
+raw/*.md
+
 # IDE
 .idea/
 .vscode/
