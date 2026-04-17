@@ -46,4 +46,6 @@ class ChromaDB:
             print_info(f"Loaded {len(content)} chars")
             print_info(f"Content preview:\n{content[:200]}...")
             chunks = chunk_text(content)
+            if not chunks:
+                continue
             self.ingest_data(collection, file, chunks)
