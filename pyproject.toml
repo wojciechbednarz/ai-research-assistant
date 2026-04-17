@@ -1,0 +1,25 @@
+[project]
+name = "ai-research-assistant"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "chromadb>=1.5.8",
+    "fastapi>=0.136.0",
+    "langgraph>=1.1.6",
+    "openai>=2.32.0",
+    "python-dotenv>=1.2.2",
+    "rich>=15.0.0",
+    "uvicorn>=0.44.0",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.20.1",
+    "ruff>=0.15.11",
+]
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
