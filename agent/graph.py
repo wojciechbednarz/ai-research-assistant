@@ -22,7 +22,9 @@ class NodeHandler:
         self.agent = Agent(client)
 
     async def analyze(self, state: AgentState) -> dict:
-        full_messages, message = await self.agent.analyze_llm(state["messages"], state["documents"], state["question"])
+        full_messages, message = await self.agent.analyze_llm(
+            state["messages"], state["documents"], state["question"]
+        )
         if message.get("tool_calls"):
             return {"messages": full_messages}
         return {"messages": full_messages, "analysis": message["content"]}
@@ -48,11 +50,19 @@ def make_retrieve_node(collection: Collection) -> Callable:
             args = json.loads(last_message["tool_calls"][0]["function"]["arguments"])
             query = args.get("query", state["question"])
             documents = search(collection, query)
-            tool_message = {"role": "tool", "tool_call_id": last_message["tool_calls"][0]["id"], "content": str(documents)}
-            return {"documents": documents, "messages": state["messages"] + [tool_message]}
+            tool_message = {
+                "role": "tool",
+                "tool_call_id": last_message["tool_calls"][0]["id"],
+                "content": str(documents),
+            }
+            return {
+                "documents": documents,
+                "messages": state["messages"] + [tool_message],
+            }
         else:
             documents = search(collection, state["question"])
             return {"documents": documents}
+
     return retrieve
 
 

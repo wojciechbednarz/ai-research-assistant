@@ -8,7 +8,9 @@ class Agent:
     def __init__(self, client: AsyncClient):
         self.client = client
 
-    async def analyze_llm(self, messages: list, retrieved_docs: list[dict], question: str) -> dict:
+    async def analyze_llm(
+        self, messages: list, retrieved_docs: list[dict], question: str
+    ) -> dict:
         """Sends the user input and retrieved documents to the LLM for analysis."""
         if not messages:  # first call — build initial messages
             chunks_text = "\n\n---\n\n".join(doc["document"] for doc in retrieved_docs)
@@ -31,7 +33,7 @@ class Agent:
         response = await send_post_request(
             client=self.client, url=settings.CHAT_COMPLETIONS_URL, payload=payload
         )
-        message =  response["choices"][0]["message"]
+        message = response["choices"][0]["message"]
         return (messages + [message], message)
 
     async def respond_llm(

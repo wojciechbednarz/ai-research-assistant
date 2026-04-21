@@ -97,6 +97,10 @@ ai-research-assistant/
 ├── agent/
 │   ├── graph.py         # LangGraph StateGraph, node wiring
 │   └── agent.py         # LLM calls (analyze + respond)
+├── mcp_server/
+│   ├── server.py        # Tool registry, dispatcher, main()
+│   ├── protocol.py      # JSON-RPC 2.0 message builders, error codes
+│   └── transport.py     # STDIO read/write loop
 ├── raw/                 # Your markdown documents (gitignored if sensitive)
 ├── docker-compose.yml   # ChromaDB service
 └── .env.example         # Environment variable template
@@ -107,6 +111,6 @@ ai-research-assistant/
 - [x] RAG foundation — ChromaDB ingestion + similarity retrieval
 - [x] LangGraph 3-node agent — retrieve → analyze → respond
 - [x] Function calling + conditional routing (tool-mediated retrieval loop)
-- [ ] MCP server — JSON-RPC 2.0 + STDIO, exposes `search_documents` + `summarize_text`
+- [x] MCP server — JSON-RPC 2.0 + STDIO, 3 tools (`search_documents`, `summarize_text`, `get_metadata`), tested end-to-end via STDIO
 - [ ] Langfuse observability — token tracking, latency, cost per request
 - [ ] Claude Desktop integration — query your notes from Claude UI

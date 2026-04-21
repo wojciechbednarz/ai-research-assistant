@@ -13,6 +13,6 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     OPEN_ROUTER_DEFAULT_MODEL: str = "google/gemini-2.5-flash-lite"
     CHAT_COMPLETIONS_URL: str = "https://openrouter.ai/api/v1/chat/completions"
-
+    FIRECRAWL_API_KEY: str
 
 settings = Settings()
