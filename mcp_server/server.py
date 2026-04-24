@@ -1,4 +1,4 @@
-from typing import Any, Callable
+from typing import Any
 from .protocol import make_result, make_error, ERROR_METHOD_NOT_FOUND
 from .transport import run_server
 from rag.retrieval import hybrid_search
