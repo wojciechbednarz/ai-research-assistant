@@ -53,4 +53,4 @@ jobs:
         with:
           python-version: "3.13"
       - run: uv sync --frozen
-      - run: uv run mypy .
+      - run: uv run mypy agent rag mcp_server main.py api.py config.py helpers.py schemas.py

@@ -7,7 +7,7 @@ ERROR_METHOD_NOT_FOUND = -32601
 ERROR_INTERNAL = -32603
 
 
-def make_result(id: str, result: Any) -> dict:
+def make_result(id: str | int | None, result: Any) -> dict:
     """
     Helper function to create a JSON-RPC response.
     :id: The ID of the request this is responding to.
@@ -17,7 +17,7 @@ def make_result(id: str, result: Any) -> dict:
     return {"jsonrpc": "2.0", "id": id, "result": result}
 
 
-def make_error(id: str, code: int, message: str) -> dict:
+def make_error(id: str | int | None, code: int, message: str) -> dict:
     """Helper function to create a JSON-RPC error response.
     :id: The ID of the request this is responding to.
     :code: The error code (e.g. -32700 for parse error).

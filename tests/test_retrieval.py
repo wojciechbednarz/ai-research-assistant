@@ -3,7 +3,9 @@ from rag.retrieval import hybrid_search, _tokenize
 
 
 def _make_collection(
-    docs: list[str], ids: list[str] = None, distances: list[float] = None
+    docs: list[str],
+    ids: list[str] | None = None,
+    distances: list[float] | None = None,
 ):
     if ids is None:
         ids = [f"doc{i}" for i in range(len(docs))]

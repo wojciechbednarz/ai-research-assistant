@@ -1,9 +1,12 @@
+from typing import Any, Callable
 from .protocol import make_result, make_error, ERROR_METHOD_NOT_FOUND
 from .transport import run_server
 from rag.retrieval import hybrid_search
 from rag.ingestion import ChromaDB
 from functools import lru_cache
 import json
+
+ToolEntry = dict[str, Any]
 
 search_documents = {
     "schema": {
@@ -16,7 +19,7 @@ search_documents = {
             "required": ["query"],
         },
     },
-    "handler": None,
+    "handler": None,  # type: ignore[assignment]
 }
 
 
@@ -36,11 +39,11 @@ get_metadata = {
             "required": ["text"],
         },
     },
-    "handler": None,
+    "handler": None,  # type: ignore[assignment]
 }
 
 
-TOOLS = {
+TOOLS: dict[str, dict[str, Any]] = {
     "search_documents": search_documents,
     "get_metadata": get_metadata,
 }
@@ -63,7 +66,7 @@ def dispatch(request) -> dict:
         )
 
     elif method == "notifications/initialized":
-        return None
+        return {}
 
     elif method == "tools/list":
         return make_result(id, {"tools": [t["schema"] for t in TOOLS.values()]})

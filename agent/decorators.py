@@ -41,6 +41,7 @@ def llm_retry(
                         except Exception:
                             logger.exception(f"Fallback model {fallback_model} failed.")
                             raise
+            raise RuntimeError("llm_retry: exhausted retries without returning")
 
         return wrapper
 

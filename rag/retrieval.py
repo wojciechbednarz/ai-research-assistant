@@ -16,13 +16,14 @@ def _tokenize(text: str) -> list[str]:
 def search(collection: Collection, question: str, n_results: int = 3) -> list[dict]:
     logger.debug("Searching for: %s", question)
     query_result = collection.query(query_texts=[question], n_results=n_results)
+    ids = query_result["ids"] or []
+    documents = query_result["documents"] or []
+    distances = query_result["distances"] or []
+    if not ids:
+        return []
     return [
         {"id": id_, "document": doc, "distance": dist}
-        for id_, doc, dist in zip(
-            query_result["ids"][0],
-            query_result["documents"][0],
-            query_result["distances"][0],
-        )
+        for id_, doc, dist in zip(ids[0], documents[0], distances[0])
     ]
 
 

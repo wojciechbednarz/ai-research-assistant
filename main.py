@@ -46,6 +46,7 @@ async def lifespan(app: FastAPI):
     )
     init = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize"}) + "\n"
     notif = json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}) + "\n"
+    assert process.stdin is not None and process.stdout is not None
     process.stdin.write(init.encode())
     process.stdin.write(notif.encode())
     await process.stdin.drain()
