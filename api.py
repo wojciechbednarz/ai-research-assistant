@@ -1,21 +1,35 @@
-from config import settings
+from config import get_settings
 import httpx
-from display import print_header, print_results
+import logging
+from langfuse import observe, get_client
+
+langfuse = get_client()
+
+logger = logging.getLogger(__name__)
 
 
-async def send_post_request(
-    client: httpx.AsyncClient, url: str, payload: dict
-) -> httpx.Response:
+@observe(as_type="generation")
+async def send_post_request(client: httpx.AsyncClient, url: str, payload: dict) -> dict:
     """Helper function to send POST requests."""
-    print_header(f"Sending POST request to {url} with payload: {payload}")
+    logger.debug("Sending POST request to %s model=%s", url, payload.get("model"))
     try:
         response = await client.post(
             url,
             json=payload,
-            headers={"Authorization": f"Bearer {settings.OPEN_ROUTER_API_KEY}"},
+            headers={"Authorization": f"Bearer {get_settings().OPEN_ROUTER_API_KEY}"},
         )
         response.raise_for_status()
-        return response.json()
-    except httpx.HTTPError as e:
-        print_header(f"HTTP error occurred: {e}")
+        data = response.json()
+        usage = data.get("usage", {})
+        langfuse.update_current_generation(
+            model=payload.get("model"),
+            usage_details={
+                "input": usage.get("prompt_tokens"),
+                "output": usage.get("completion_tokens"),
+                "total": usage.get("total_tokens"),
+            },
+        )
+        return data
+    except httpx.HTTPError:
+        logger.exception("HTTP error occurred calling %s", url)
         raise

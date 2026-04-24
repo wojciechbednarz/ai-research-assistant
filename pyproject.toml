@@ -5,21 +5,35 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "cachetools>=7.0.6",
     "chromadb>=1.5.8",
     "fastapi>=0.136.0",
-    "firecrawl-py>=4.22.2",
+    "httpx>=0.28.0",
+    "langfuse>=4.5.0",
     "langgraph>=1.1.6",
     "openai>=2.32.0",
     "python-dotenv>=1.2.2",
+    "rank-bm25>=0.2.2",
+    "tiktoken>=0.7",
     "rich>=15.0.0",
-    "trio>=0.33.0",
     "uvicorn>=0.44.0",
 ]
 
 [dependency-groups]
 dev = [
     "mypy>=1.20.1",
+    "pytest>=8.0.0",
     "ruff>=0.15.11",
+    "testcontainers[chroma]>=4.8",
+    "pytest-asyncio>=0.24",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+markers = [
+    "integration: tests that spin up Docker containers (slow)",
 ]
 
 [tool.mypy]

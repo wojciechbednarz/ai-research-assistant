@@ -1,50 +1,46 @@
-from config import settings
+from config import get_settings
 import chromadb
+import logging
 from chromadb.api import Collection
-from display import print_header, print_success, print_info
 from helpers import get_markdown_content, chunk_text
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 class ChromaDB:
     """Handles interactions with the ChromaDB vector database."""
 
     def __init__(self, collection_name: str) -> None:
-        """Initializes the ChromaDB client and collection."""
         self.chroma_client = chromadb.HttpClient(
-            host=settings.CHROMA_HOST, port=settings.CHROMA_PORT
+            host=get_settings().CHROMA_HOST, port=get_settings().CHROMA_PORT
         )
         self.collection = self.chroma_client.get_or_create_collection(
             name=collection_name
         )
 
     def count_collection(self, collection_name: str) -> int:
-        """Returns the number of documents in the collection."""
         collection = self.chroma_client.get_collection(name=collection_name)
         return collection.count()
 
     def ingest_data(
         self, collection: Collection, file: Path, chunks: list[str]
     ) -> None:
-        """Ingests data into the ChromaDB collection."""
-        print_header("Ingesting")
+        logger.debug("Ingesting %s (%d chunks)", file.stem, len(chunks))
         collection.upsert(
             ids=[f"{file.stem}_chunk{i}" for i in range(len(chunks))], documents=chunks
         )
-        print_success("Done")
+        logger.debug("Ingested %s", file.stem)
 
     def load_document(self, file_path: Path) -> None:
-        print_header("Loading Document")
         content = get_markdown_content(file_path)
-        print_info(f"Loaded {len(content)} chars")
-        print_info(f"Content preview:\n{content[:200]}...")
+        logger.debug("Loaded %s: %d chars", file_path.name, len(content))
 
     def load_and_ingest(self, file_path: list[Path], collection: Collection) -> None:
         for file in file_path:
-            print_header(f"Processing {file.name}")
+            logger.debug("Processing %s", file.name)
             content = get_markdown_content(file)
-            print_info(f"Loaded {len(content)} chars")
-            print_info(f"Content preview:\n{content[:200]}...")
+            logger.debug("Loaded %d chars from %s", len(content), file.name)
             chunks = chunk_text(content)
             if not chunks:
                 continue

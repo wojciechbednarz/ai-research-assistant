@@ -1,7 +1,8 @@
 from .protocol import make_result, make_error, ERROR_METHOD_NOT_FOUND
 from .transport import run_server
-from rag.retrieval import search
+from rag.retrieval import hybrid_search
 from rag.ingestion import ChromaDB
+from functools import lru_cache
 import json
 
 search_documents = {
@@ -13,22 +14,6 @@ search_documents = {
             "type": "object",
             "properties": {"query": {"type": "string", "description": "Search query"}},
             "required": ["query"],
-        },
-    },
-    "handler": None,
-}
-
-summarize_text = {
-    "schema": {
-        "name": "summarize_text",
-        "title": "Summarize Text",
-        "description": "Summarize the given text",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "text": {"type": "string", "description": "Text to summarize"}
-            },
-            "required": ["text"],
         },
     },
     "handler": None,
@@ -57,7 +42,6 @@ get_metadata = {
 
 TOOLS = {
     "search_documents": search_documents,
-    "summarize_text": summarize_text,
     "get_metadata": get_metadata,
 }
 
@@ -97,16 +81,21 @@ def dispatch(request) -> dict:
 
 
 def main() -> None:
-    db = ChromaDB(collection_name="ai-research-assistant")
-    collection = db.collection
+    @lru_cache(maxsize=1)
+    def get_collection():
+        return ChromaDB(collection_name="ai-research-assistant").collection
 
     TOOLS["search_documents"]["handler"] = lambda args: json.dumps(
-      [{"id": r["id"], "document": r["document"][:300]} for r in search(collection, args["query"])],
-      ensure_ascii=False)
-    TOOLS["summarize_text"]["handler"] = lambda args: f"Summary of {args['text'][:100]}"
-    TOOLS["get_metadata"]["handler"] = lambda args: json.dumps(                                                                                                                                                                             
-      {"collection": "ai-research-assistant", "count": collection.count()},
-      ensure_ascii=False)
+        [
+            {"id": r["id"], "document": r["document"][:300]}
+            for r in hybrid_search(get_collection(), args["query"])
+        ],
+        ensure_ascii=False,
+    )
+    TOOLS["get_metadata"]["handler"] = lambda args: json.dumps(
+        {"collection": "ai-research-assistant", "count": get_collection().count()},
+        ensure_ascii=False,
+    )
     run_server(dispatch)
 
 
