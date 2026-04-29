@@ -18,7 +18,7 @@ Markdown notes
   ChromaDB          ← document ingestion + chunking + embeddings
       ↓
 LangGraph Agent
-  ├── retrieve      ← similarity search (top-3 chunks)
+  ├── retrieve      ← hybrid BM25 + vector search (top-3 chunks)
   ├── analyze       ← LLM synthesizes retrieved context
   └── respond       ← LLM produces grounded final answer
       ↓
@@ -97,6 +97,23 @@ curl -X POST http://localhost:8001/get_collection_count
 }
 ```
 The agent refuses to fabricate when retrieval doesn't surface grounded sources, rather than guessing from related concepts. This is enforced by the `respond_llm` prompt and validated by Langfuse traces.
+
+## Testing
+
+Unit tests run without Docker; integration tests spin up a real ChromaDB via testcontainers and require Docker running plus the env vars from `.env`.
+
+```bash
+# Unit tests (fast, no Docker)
+uv run pytest -m "not integration" -q
+
+# End-to-end / integration tests (requires Docker + .env)
+uv run pytest -m integration -v
+
+# Everything
+uv run pytest -v
+```
+
+CI runs the unit suite, ruff, and mypy against `agent/ rag/ mcp_server/ main.py api.py config.py helpers.py schemas.py` (see `.github/workflows/ci.yml`).
 
 ## Project structure
 
