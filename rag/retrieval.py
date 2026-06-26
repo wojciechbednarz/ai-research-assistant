@@ -14,6 +14,12 @@ def _tokenize(text: str) -> list[str]:
 
 
 def search(collection: Collection, question: str, n_results: int = 3) -> list[dict]:
+    """Search the ChromaDB collection for documents relevant to the question, returning up to n_results.
+    :collection: The ChromaDB collection to search.
+    :question: The question to search for.
+    :n_results: The maximum number of results to return.
+    :returns: A list of dictionaries containing the document ID, content, and distance.
+    """
     logger.debug("Searching for: %s", question)
     query_result = collection.query(query_texts=[question], n_results=n_results)
     ids = query_result["ids"] or []
@@ -46,7 +52,7 @@ def hybrid_search(
     for i, result in enumerate(vector_results):
         vector_score = 1 - result["distance"]
         bm25_score = bm25_scores[i] / (max(bm25_scores) + 1e-9)
-        result["hybrid_score"] = alpha * vector_score + (1 - alpha) * bm25_score
+        result["hybrid_score"] = float(alpha * vector_score + (1 - alpha) * bm25_score)
     return sorted(vector_results, key=lambda r: r["hybrid_score"], reverse=True)[
         :n_results
     ]

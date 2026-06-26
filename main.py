@@ -3,10 +3,10 @@ import sys
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-
+from fastapi.responses import StreamingResponse
 from fastapi import FastAPI, Request, HTTPException, Query
 from rag.ingestion import ChromaDB
-
+from uuid import uuid4
 from agent.graph import build_graph, run_graph
 from pathlib import Path
 from helpers import get_all_files_from_dir
@@ -28,6 +28,7 @@ async def lifespan(app: FastAPI):
     logging.getLogger("chromadb").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
+    logging.getLogger("aiosqlite").setLevel(logging.WARNING)
     s = get_settings()
     app.state.chroma_db = ChromaDB(collection_name="ai-research-assistant")
     app.state.http_client = AsyncClient(timeout=s.HTTP_TIMEOUT)
@@ -113,18 +114,43 @@ async def get_collection_count(request: Request) -> int:
 @app.get("/research")
 async def research(
     request: Request, query: str = Query(..., min_length=1, max_length=500)
-) -> RespondResponse:
+) -> RespondResponse | dict:
     """Main research function that queries the vector database."""
     cache = request.app.state.response_cache
     cached = cache.get(query)
     if cached:
         return cached
     query_result = await run_graph(query, request.app.state.compiled_graph)
+    if query_result.get("__interrupt__"):
+      return {
+          "status": "awaiting_approval",
+          "thread_id": 1,
+          "prompt": query_result["__interrupt__"][0].value,
+      }
     answer = query_result["answer"]
     async with request.app.state.cache_lock:
         cache[query] = answer
     return answer
 
+@app.get("/research/stream")
+async def research_stream(request: Request, query: str = Query(..., min_length=1, max_length=500)) -> StreamingResponse:
+    """
+    Stream research results as they are generated.
+    TO DO: implement streaming in the agent and graph to yield tokens as they come in, rather than waiting for the full response.
+    """
+    graph = request.app.state.compiled_graph
+    config = {"configurable": {"thread_id": str(uuid4())}}
+    inp = {"question": query, "messages": [], "tool_trace": [], "tool_iterations": 0}
+
+    async def event_generator():
+        async for token, meta in graph.astream(inp, config, stream_mode="messages"):
+            if meta.get("langgraph_node") != "respond":
+                continue
+            if content := getattr(token, "content", None):
+                yield f"data: {json.dumps({'token': content})}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 @app.post("/mcp_server")
 async def mcp_server(tool: MCPTool, request: Request) -> dict:

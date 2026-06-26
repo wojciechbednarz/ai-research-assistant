@@ -49,7 +49,7 @@ TOOLS: dict[str, dict[str, Any]] = {
 }
 
 
-def dispatch(request) -> dict:
+def dispatch(request) -> dict | None:
     method = request.get("method")
     id = request.get("id")
 
@@ -66,7 +66,7 @@ def dispatch(request) -> dict:
         )
 
     elif method == "notifications/initialized":
-        return {}
+        return None
 
     elif method == "tools/list":
         return make_result(id, {"tools": [t["schema"] for t in TOOLS.values()]})

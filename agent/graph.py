@@ -1,5 +1,8 @@
 from langgraph.graph import StateGraph, END, START
 from langgraph.graph.state import CompiledStateGraph
+from langgraph.types import interrupt
+from langgraph.checkpoint.memory import InMemorySaver
+from langchain_core.runnables import RunnableConfig
 from typing import TypedDict
 from dataclasses import dataclass
 from rag.retrieval import hybrid_search
@@ -24,6 +27,7 @@ class AgentState(TypedDict):
     messages: list
     tool_trace: list
     tool_iterations: int
+    approved: str
 
 
 @dataclass
@@ -113,7 +117,18 @@ class NodeHandler:
         )
         return {"answer": answer}
 
+    async def approve(self, state: AgentState):
+        logger.debug("APPROVE node entered, prior approved=%s", state.get("approved"))
+        approved = interrupt("Do you approve this action?")
+        logger.debug("APPROVE resumed with=%s", approved)
+        return {"approved": approved}
+
     async def route_after_analyze(self, state: AgentState) -> str:
+        """
+        Decide whether to retrieve more docs or respond, based on presence of tool calls and iteration count.
+        :state: The current state after the analyze node, including messages and tool call history.
+        :returns: "retrieve" to loop back to retrieval, or "respond" to proceed to response generation.
+        """
         last_message = state["messages"][-1]
         iterations = state.get("tool_iterations", 0)
         max_iter = get_settings().MAX_TOOL_ITERATIONS
@@ -127,6 +142,9 @@ class NodeHandler:
             )
         return "respond"
 
+    async def route_after_approval(self, state: AgentState) -> str:
+        return "respond" if state.get("approved") else "abort"
+
 
 def build_graph(collection: Collection, client: AsyncClient) -> CompiledStateGraph:
     """Build and compile the agent graph once at startup."""
@@ -134,20 +152,38 @@ def build_graph(collection: Collection, client: AsyncClient) -> CompiledStateGra
     graph = StateGraph(AgentState)
     graph.add_node("retrieve", node_handler.retrieve)
     graph.add_node("analyze", node_handler.analyze)
+    graph.add_node("approve", node_handler.approve)
     graph.add_node("respond", node_handler.respond)
     graph.add_edge(START, "retrieve")
     graph.add_edge("retrieve", "analyze")
     graph.add_conditional_edges(
         "analyze",
         node_handler.route_after_analyze,
-        {"retrieve": "retrieve", "respond": "respond"},
+        {"retrieve": "retrieve", "respond": "approve"},
+    )
+    graph.add_conditional_edges(
+        "approve",
+        node_handler.route_after_approval,
+        {"respond": "respond", "abort": END},
     )
     graph.add_edge("respond", END)
-    return graph.compile()
+    checkpointer = InMemorySaver()
+    
+
+    return graph.compile(checkpointer=checkpointer)
 
 
 @observe(capture_input=False)
 async def run_graph(question: str, compiled_graph: CompiledStateGraph) -> dict:
+    config: RunnableConfig = {"configurable": {"thread_id": 1}}
+    state = await compiled_graph.aget_state(config)
+    logger.debug("Graph state: next=%s checkpoint=%s", state.next, state.config.get("configurable", {}).get("checkpoint_id"))
     return await compiled_graph.ainvoke(
-        {"question": question, "messages": [], "tool_trace": [], "tool_iterations": 0}
+        input={
+            "question": question,
+            "messages": [],
+            "tool_trace": [],
+            "tool_iterations": 0,
+        },
+        config=config,
     )

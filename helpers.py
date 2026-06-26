@@ -23,6 +23,14 @@ def get_all_files_from_dir(directory: Path) -> list[Path]:
 
 
 def chunk_text(text: str, chunk_size: int = 800, overlap: int = 150) -> list[str]:
+    """
+    Chunks text into pieces of approximately chunk_size characters, with an optional overlap.
+    Overlap set to stop context loss at chunk boundaries.
+    :text: The input text to chunk.
+    :chunk_size: The target size of each chunk in characters.
+    :overlap: The number of characters to overlap between chunks.
+    :returns: A list of text chunks.
+    """
     if overlap >= chunk_size:
         raise ValueError(
             f"overlap ({overlap}) must be less than chunk_size ({chunk_size})"
