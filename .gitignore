@@ -23,3 +23,12 @@ raw/*.md
 # IDE
 .idea/
 .vscode/
+
+# LangGraph checkpointer database
+checkpoints.db
+checkpoints.db-shm
+checkpoints.db-wal
+
+
+# Devcontainers
+.devcontainer/

@@ -5,11 +5,12 @@ WORKDIR /app
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 COPY pyproject.toml uv.lock ./
+ENV UV_PROJECT_ENVIRONMENT=/opt/.venv
 RUN uv sync --frozen --no-dev
 
 COPY . .
 
-ENV PATH="/app/.venv/bin:$PATH"
+ENV PATH="/opt/.venv/bin:$PATH"
 
 EXPOSE 8001
 

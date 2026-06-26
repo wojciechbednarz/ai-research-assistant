@@ -73,6 +73,26 @@ curl "http://localhost:8001/research?query=What+is+function+calling"
 curl -X POST http://localhost:8001/get_collection_count
 ```
 
+### Test queries
+
+```bash
+# /research — grounded answer expected (confidence: high)
+curl "http://localhost:8001/research?query=What+is+function+calling"
+
+# /research — refusal expected (confidence: low, empty sources)
+curl "http://localhost:8001/research?query=What+is+quantum+computing"
+
+# /mcp_server — search_documents tool: returns top chunks (id + 300-char preview)
+curl -X POST http://localhost:8001/mcp_server \
+  -H "Content-Type: application/json" \
+  -d '{"name": "search_documents", "arguments": {"query": "function calling"}}'
+
+# /mcp_server — get_metadata tool: returns collection name + chunk count
+curl -X POST http://localhost:8001/mcp_server \
+  -H "Content-Type: application/json" \
+  -d '{"name": "get_metadata", "arguments": {"text": "info"}}'
+```
+
 > **First-run note:** the first `/ingest` call downloads ChromaDB's `all-MiniLM-L6-v2` embedding model (~80 MB) on the fly. Allow 30–60 seconds for warmup. Subsequent calls reuse the cached model. A `GPU device discovery failed` warning is expected — embeddings fall back to CPU inside the container.
 
 **Example — grounded answer (English query against Polish corpus):**

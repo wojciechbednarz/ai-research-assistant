@@ -19,7 +19,9 @@ services:
       - chromadb
     command: >
       sh -c "until python -c 'import socket; socket.create_connection((\"chromadb\", 8000), 2)' 2>/dev/null; do echo 'waiting for chromadb...'; sleep 1; done;
-      exec uvicorn main:app --host 0.0.0.0 --port 8001"
+      exec uvicorn main:app --host 0.0.0.0 --port 8001 --reload"
+    volumes:
+      - .:/app
 
 volumes:
   chroma_data:
