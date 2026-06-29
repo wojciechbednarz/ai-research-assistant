@@ -29,6 +29,5 @@ checkpoints.db
 checkpoints.db-shm
 checkpoints.db-wal
 
-
-# Devcontainers
-.devcontainer/
+# Sketch files
+langgraph_sketch.py
