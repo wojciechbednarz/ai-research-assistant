@@ -1,11 +1,12 @@
 from pathlib import Path
+
 import tiktoken
 
 _enc = tiktoken.get_encoding("cl100k_base")
 
 
 def get_file_content(file_path: Path) -> str:
-    with open(file_path, "r", encoding="utf-8") as file:
+    with open(file_path, encoding="utf-8") as file:
         return file.read()
 
 
@@ -32,9 +33,7 @@ def chunk_text(text: str, chunk_size: int = 800, overlap: int = 150) -> list[str
     :returns: A list of text chunks.
     """
     if overlap >= chunk_size:
-        raise ValueError(
-            f"overlap ({overlap}) must be less than chunk_size ({chunk_size})"
-        )
+        raise ValueError(f"overlap ({overlap}) must be less than chunk_size ({chunk_size})")
     chunks = []
     start = 0
     while start < len(text):

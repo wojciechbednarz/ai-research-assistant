@@ -1,8 +1,8 @@
-import json
-import re
-import logging
 import inspect
-from typing import Callable, Iterator
+import json
+import logging
+import re
+from collections.abc import Callable, Iterator
 
 logger = logging.getLogger(__name__)
 
@@ -18,14 +18,13 @@ def parser_pipeline(
 ) -> Iterator[Callable[[str], dict]]:
     """Create a parser pipeline that applies multiple parsers in sequence."""
     logger.debug(f"Attempting to parse LLM output with {len(parsers)} parsers.")
-    for parser in parsers:
-        yield parser
+    yield from parsers
 
 
-async def parse_with_fallbacks(
-    raw: str, parsers: list[Callable[[str], dict]], **kwargs
-) -> dict:
-    """Attempt to parse LLM output using a list of parsers, falling back to the next parser on failure."""
+async def parse_with_fallbacks(raw: str, parsers: list[Callable[[str], dict]], **kwargs) -> dict:
+    """Attempt to parse LLM output using a list of parsers, falling back to the next
+    parser on failure.
+    """
     logger.debug("Starting parsing with fallbacks.")
     for parser in parser_pipeline(parsers):
         try:
@@ -34,9 +33,7 @@ async def parse_with_fallbacks(
             else:
                 return parser(raw, **kwargs)
         except ParseFailedError as exc:
-            logger.debug(
-                f"Parser {parser.__name__} failed with error: {exc}. Trying next parser."
-            )
+            logger.debug(f"Parser {parser.__name__} failed with error: {exc}. Trying next parser.")
             continue
     logger.error(f"All {len(parsers)} parsers failed to parse the input: {raw}")
     raise ParseFailedError(f"All {len(parsers)} parsers failed to parse the input.")

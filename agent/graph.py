@@ -1,20 +1,22 @@
-from langgraph.graph import StateGraph, END, START
-from langgraph.graph.state import CompiledStateGraph
-from langgraph.types import interrupt
-from langgraph.checkpoint.memory import InMemorySaver
-from langchain_core.runnables import RunnableConfig
-from typing import TypedDict
-from dataclasses import dataclass
-from rag.retrieval import hybrid_search
-from chromadb.api import Collection
-from httpx import AsyncClient
-from agent.agent import Agent
-from agent.tools.handlers import summarize_text
-from config import get_settings
 import asyncio
 import json
 import logging
+from dataclasses import dataclass
+from typing import TypedDict
+
+from chromadb.api import Collection
+from httpx import AsyncClient
+from langchain_core.runnables import RunnableConfig
 from langfuse import observe
+from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.graph import END, START, StateGraph
+from langgraph.graph.state import CompiledStateGraph
+from langgraph.types import interrupt
+
+from agent.agent import Agent
+from agent.tools.handlers import summarize_text
+from config import get_settings
+from rag.retrieval import hybrid_search
 
 logger = logging.getLogger(__name__)
 
@@ -82,8 +84,7 @@ class NodeHandler:
         documents = await asyncio.to_thread(hybrid_search, self.collection, query)
         return {
             "documents": documents,
-            "messages": state["messages"]
-            + [_tool_message(tool_call.id, str(documents))],
+            "messages": state["messages"] + [_tool_message(tool_call.id, str(documents))],
             "tool_iterations": state.get("tool_iterations", 0) + 1,
         }
 
@@ -96,9 +97,7 @@ class NodeHandler:
         }
 
     async def _plain_search(self, state: AgentState) -> dict:
-        documents = await asyncio.to_thread(
-            hybrid_search, self.collection, state["question"]
-        )
+        documents = await asyncio.to_thread(hybrid_search, self.collection, state["question"])
         return {"documents": documents}
 
     async def analyze(self, state: AgentState) -> dict:
@@ -125,9 +124,12 @@ class NodeHandler:
 
     async def route_after_analyze(self, state: AgentState) -> str:
         """
-        Decide whether to retrieve more docs or respond, based on presence of tool calls and iteration count.
-        :state: The current state after the analyze node, including messages and tool call history.
-        :returns: "retrieve" to loop back to retrieval, or "respond" to proceed to response generation.
+        Decide whether to retrieve more docs or respond, based on presence of tool calls
+        and iteration count.
+        :state: The current state after the analyze node, including messages and tool
+            call history.
+        :returns: "retrieve" to loop back to retrieval, or "respond" to proceed to
+            response generation.
         """
         last_message = state["messages"][-1]
         iterations = state.get("tool_iterations", 0)
@@ -168,7 +170,6 @@ def build_graph(collection: Collection, client: AsyncClient) -> CompiledStateGra
     )
     graph.add_edge("respond", END)
     checkpointer = InMemorySaver()
-    
 
     return graph.compile(checkpointer=checkpointer)
 
@@ -177,7 +178,11 @@ def build_graph(collection: Collection, client: AsyncClient) -> CompiledStateGra
 async def run_graph(question: str, compiled_graph: CompiledStateGraph) -> dict:
     config: RunnableConfig = {"configurable": {"thread_id": 1}}
     state = await compiled_graph.aget_state(config)
-    logger.debug("Graph state: next=%s checkpoint=%s", state.next, state.config.get("configurable", {}).get("checkpoint_id"))
+    logger.debug(
+        "Graph state: next=%s checkpoint=%s",
+        state.next,
+        state.config.get("configurable", {}).get("checkpoint_id"),
+    )
     return await compiled_graph.ainvoke(
         input={
             "question": question,

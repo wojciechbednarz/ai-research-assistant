@@ -1,5 +1,6 @@
 import pytest
-from schemas import RespondResponse, MCPTool
+
+from schemas import MCPTool, RespondResponse
 
 
 @pytest.mark.parametrize("confidence", ["high", "medium", "low"])

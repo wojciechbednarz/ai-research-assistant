@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock
-from rag.retrieval import hybrid_search, _tokenize
+
+from rag.retrieval import _tokenize, hybrid_search
 
 
 def _make_collection(

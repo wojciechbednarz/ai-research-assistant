@@ -1,7 +1,8 @@
-from config import get_settings
-from api import send_post_request
 from httpx import AsyncClient
+
 from agent.decorators import llm_retry
+from api import send_post_request
+from config import get_settings
 
 
 @llm_retry(max_retries=3)
@@ -19,7 +20,10 @@ async def summarize_text(
         },
         {
             "role": "user",
-            "content": f"Please summarize the following text in no more than {max_tokens} tokens:\n\n{text}",
+            "content": (
+                f"Please summarize the following text in no more than "
+                f"{max_tokens} tokens:\n\n{text}"
+            ),
         },
     ]
     payload = {

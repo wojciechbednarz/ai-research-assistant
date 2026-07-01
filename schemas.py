@@ -1,10 +1,14 @@
 from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class MCPTool(BaseModel):
     name: str = Field(
-        description="Name of the MCP tool to invoke (e.g. 'search_documents', 'summarize_text', 'get_metadata').",
+        description=(
+            "Name of the MCP tool to invoke (e.g. 'search_documents', "
+            "'summarize_text', 'get_metadata')."
+        ),
         examples=["search_documents"],
     )
     arguments: dict = Field(

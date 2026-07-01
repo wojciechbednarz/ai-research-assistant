@@ -1,9 +1,11 @@
-from config import get_settings
-import chromadb
 import logging
-from chromadb.api import Collection
-from helpers import get_markdown_content, chunk_text
 from pathlib import Path
+
+import chromadb
+from chromadb.api import Collection
+
+from config import get_settings
+from helpers import chunk_text, get_markdown_content
 
 logger = logging.getLogger(__name__)
 
@@ -15,17 +17,13 @@ class ChromaDB:
         self.chroma_client = chromadb.HttpClient(
             host=get_settings().CHROMA_HOST, port=get_settings().CHROMA_PORT
         )
-        self.collection = self.chroma_client.get_or_create_collection(
-            name=collection_name
-        )
+        self.collection = self.chroma_client.get_or_create_collection(name=collection_name)
 
     def count_collection(self, collection_name: str) -> int:
         collection = self.chroma_client.get_collection(name=collection_name)
         return collection.count()
 
-    def ingest_data(
-        self, collection: Collection, file: Path, chunks: list[str]
-    ) -> None:
+    def ingest_data(self, collection: Collection, file: Path, chunks: list[str]) -> None:
         logger.debug("Ingesting %s (%d chunks)", file.stem, len(chunks))
         collection.upsert(
             ids=[f"{file.stem}_chunk{i}" for i in range(len(chunks))], documents=chunks

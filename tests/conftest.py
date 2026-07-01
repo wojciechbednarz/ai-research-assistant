@@ -1,6 +1,7 @@
 import os
-import pytest
+
 import httpx
+import pytest
 
 try:
     from testcontainers.chroma import ChromaContainer as _ChromaContainer
