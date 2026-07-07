@@ -178,7 +178,7 @@ async def run_graph(question: str, compiled_graph: CompiledStateGraph) -> dict:
     config: RunnableConfig = {"configurable": {"thread_id": 1}}
     state = await compiled_graph.aget_state(config)
     logger.debug("Graph state: next=%s checkpoint=%s", state.next, state.config.get("configurable", {}).get("checkpoint_id"))
-    return await compiled_graph.ainvoke(
+    response = await compiled_graph.ainvoke(
         input={
             "question": question,
             "messages": [],
@@ -187,3 +187,5 @@ async def run_graph(question: str, compiled_graph: CompiledStateGraph) -> dict:
         },
         config=config,
     )
+    logger.info(f"run_graph response: {response}")
+    return response

@@ -132,26 +132,6 @@ async def research(
         cache[query] = answer
     return answer
 
-@app.get("/research/stream")
-async def research_stream(request: Request, query: str = Query(..., min_length=1, max_length=500)) -> StreamingResponse:
-    """
-    Stream research results as they are generated.
-    TO DO: implement streaming in the agent and graph to yield tokens as they come in, rather than waiting for the full response.
-    """
-    graph = request.app.state.compiled_graph
-    config = {"configurable": {"thread_id": str(uuid4())}}
-    inp = {"question": query, "messages": [], "tool_trace": [], "tool_iterations": 0}
-
-    async def event_generator():
-        async for token, meta in graph.astream(inp, config, stream_mode="messages"):
-            if meta.get("langgraph_node") != "respond":
-                continue
-            if content := getattr(token, "content", None):
-                yield f"data: {json.dumps({'token': content})}\n\n"
-        yield "data: [DONE]\n\n"
-
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
-
 @app.post("/mcp_server")
 async def mcp_server(tool: MCPTool, request: Request) -> dict:
     """
