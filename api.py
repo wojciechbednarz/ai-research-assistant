@@ -1,7 +1,9 @@
-from config import get_settings
-import httpx
 import logging
-from langfuse import observe, get_client
+
+import httpx
+from langfuse import get_client, observe
+
+from config import get_settings
 
 langfuse = get_client()
 

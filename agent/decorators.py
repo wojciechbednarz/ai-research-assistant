@@ -1,8 +1,9 @@
-from config import get_settings
 import asyncio
-from functools import wraps
-from typing import Callable
 import logging
+from collections.abc import Callable
+from functools import wraps
+
+from config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +36,7 @@ def llm_retry(
                             "Exceeded maximum number of retries, trying fallback model..."
                         )
                         try:
-                            return await func(
-                                *args, **{**kwargs, "model": fallback_model}
-                            )
+                            return await func(*args, **{**kwargs, "model": fallback_model})
                         except Exception:
                             logger.exception(f"Fallback model {fallback_model} failed.")
                             raise

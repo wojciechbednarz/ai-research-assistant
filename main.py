@@ -3,21 +3,23 @@ import sys
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-from fastapi.responses import StreamingResponse
-from fastapi import FastAPI, Request, HTTPException, Query
-from rag.ingestion import ChromaDB
-from uuid import uuid4
-from agent.graph import build_graph, run_graph
-from pathlib import Path
-from helpers import get_all_files_from_dir
-import logging
-from rich.logging import RichHandler
-from contextlib import asynccontextmanager
-from httpx import AsyncClient
-from schemas import MCPTool, RespondResponse
-from config import get_settings
 import json
+import logging
+from contextlib import asynccontextmanager
+from pathlib import Path
+from uuid import uuid4
+
 from cachetools import TTLCache
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
+from httpx import AsyncClient
+from rich.logging import RichHandler
+
+from agent.graph import build_graph, run_graph
+from config import get_settings
+from helpers import get_all_files_from_dir
+from rag.ingestion import ChromaDB
+from schemas import MCPTool, RespondResponse
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +35,7 @@ async def lifespan(app: FastAPI):
     app.state.chroma_db = ChromaDB(collection_name="ai-research-assistant")
     app.state.http_client = AsyncClient(timeout=s.HTTP_TIMEOUT)
     app.state.response_cache = TTLCache(maxsize=s.CACHE_MAX_SIZE, ttl=s.CACHE_TTL)
-    app.state.compiled_graph = build_graph(
-        app.state.chroma_db.collection, app.state.http_client
-    )
+    app.state.compiled_graph = build_graph(app.state.chroma_db.collection, app.state.http_client)
     app.state.cache_lock = asyncio.Lock()
     cmd = (sys.executable, "-m", "mcp_server")
     process = await asyncio.create_subprocess_exec(
@@ -60,9 +60,7 @@ async def lifespan(app: FastAPI):
         raise RuntimeError(f"MCP subprocess init failed: {init_response['error']}")
     if init_response.get("id") != 1 or "result" not in init_response:
         raise RuntimeError(f"Unexpected MCP init response: {init_response}")
-    logger.debug(
-        "MCP subprocess initialised: %s", init_response["result"].get("serverInfo")
-    )
+    logger.debug("MCP subprocess initialised: %s", init_response["result"].get("serverInfo"))
 
     app.state.mcp_process = process
     app.state.mcp_lock = asyncio.Lock()
@@ -122,21 +120,25 @@ async def research(
         return cached
     query_result = await run_graph(query, request.app.state.compiled_graph)
     if query_result.get("__interrupt__"):
-      return {
-          "status": "awaiting_approval",
-          "thread_id": 1,
-          "prompt": query_result["__interrupt__"][0].value,
-      }
+        return {
+            "status": "awaiting_approval",
+            "thread_id": 1,
+            "prompt": query_result["__interrupt__"][0].value,
+        }
     answer = query_result["answer"]
     async with request.app.state.cache_lock:
         cache[query] = answer
     return answer
 
+
 @app.get("/research/stream")
-async def research_stream(request: Request, query: str = Query(..., min_length=1, max_length=500)) -> StreamingResponse:
+async def research_stream(
+    request: Request, query: str = Query(..., min_length=1, max_length=500)
+) -> StreamingResponse:
     """
     Stream research results as they are generated.
-    TO DO: implement streaming in the agent and graph to yield tokens as they come in, rather than waiting for the full response.
+    TO DO: implement streaming in the agent and graph to yield tokens as they come
+    in, rather than waiting for the full response.
     """
     graph = request.app.state.compiled_graph
     config = {"configurable": {"thread_id": str(uuid4())}}
@@ -152,11 +154,13 @@ async def research_stream(request: Request, query: str = Query(..., min_length=1
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
+
 @app.post("/mcp_server")
 async def mcp_server(tool: MCPTool, request: Request) -> dict:
     """
     Endpoint to call MCP tools. Expects a JSON body with the following structure:
-    :tool: MCPTool - a Pydantic model with 'name' and 'arguments' fields representing the tool to call and its arguments.
+    :tool: MCPTool - a Pydantic model with 'name' and 'arguments' fields
+        representing the tool to call and its arguments.
     :returns: dict - the result of the tool call, or an error message if the call fails.
     """
     try:

@@ -1,9 +1,10 @@
 import pytest
+
 from agent.llm_output_parser import (
-    json_parser,
-    regex_parser,
-    parse_with_fallbacks,
     ParseFailedError,
+    json_parser,
+    parse_with_fallbacks,
+    regex_parser,
 )
 
 
@@ -33,14 +34,10 @@ async def test_parse_with_fallbacks_first_succeeds():
 
 
 async def test_parse_with_fallbacks_falls_to_second():
-    result = await parse_with_fallbacks(
-        '"confidence": "low"', [json_parser, regex_parser]
-    )
+    result = await parse_with_fallbacks('"confidence": "low"', [json_parser, regex_parser])
     assert result["value"] == "low"
 
 
 async def test_parse_with_fallbacks_all_fail():
     with pytest.raises(ParseFailedError):
-        await parse_with_fallbacks(
-            "totally unparseable blob", [json_parser, regex_parser]
-        )
+        await parse_with_fallbacks("totally unparseable blob", [json_parser, regex_parser])

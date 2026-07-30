@@ -26,9 +26,7 @@ def test_collection_contains_documents_after_ingest(client) -> None:
     assert resp.status_code == 200
     count = resp.json()
     assert isinstance(count, int), f"Expected int count, got {type(count)}"
-    assert count > 0, (
-        f"Expected at least one chunk in ChromaDB after ingestion, got {count}"
-    )
+    assert count > 0, f"Expected at least one chunk in ChromaDB after ingestion, got {count}"
 
 
 def test_research_response_has_valid_schema(client) -> None:
@@ -47,9 +45,7 @@ def test_research_response_has_valid_schema(client) -> None:
 
 def test_research_answer_contains_relevant_terms(client) -> None:
     """Answer for a topic covered in raw docs references expected domain concepts."""
-    resp = client.get(
-        "/research", params={"query": "Co to jest function calling w LLM?"}
-    )
+    resp = client.get("/research", params={"query": "Co to jest function calling w LLM?"})
     assert resp.status_code == 200
     answer_lower = resp.json()["answer"].lower()
     domain_terms = {"function", "tool", "narzędzi", "llm", "model", "calling", "agent"}

@@ -1,9 +1,11 @@
 import logging
 import re
+
 from chromadb import Collection
 from rank_bm25 import BM25Okapi
-from rag.ingestion import ChromaDB
+
 from config import get_settings
+from rag.ingestion import ChromaDB
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +16,8 @@ def _tokenize(text: str) -> list[str]:
 
 
 def search(collection: Collection, question: str, n_results: int = 3) -> list[dict]:
-    """Search the ChromaDB collection for documents relevant to the question, returning up to n_results.
+    """Search the ChromaDB collection for documents relevant to the question,
+    returning up to n_results.
     :collection: The ChromaDB collection to search.
     :question: The question to search for.
     :n_results: The maximum number of results to return.
@@ -29,7 +32,7 @@ def search(collection: Collection, question: str, n_results: int = 3) -> list[di
         return []
     return [
         {"id": id_, "document": doc, "distance": dist}
-        for id_, doc, dist in zip(ids[0], documents[0], distances[0])
+        for id_, doc, dist in zip(ids[0], documents[0], distances[0], strict=True)
     ]
 
 
@@ -53,9 +56,7 @@ def hybrid_search(
         vector_score = 1 - result["distance"]
         bm25_score = bm25_scores[i] / (max(bm25_scores) + 1e-9)
         result["hybrid_score"] = float(alpha * vector_score + (1 - alpha) * bm25_score)
-    return sorted(vector_results, key=lambda r: r["hybrid_score"], reverse=True)[
-        :n_results
-    ]
+    return sorted(vector_results, key=lambda r: r["hybrid_score"], reverse=True)[:n_results]
 
 
 if __name__ == "__main__":

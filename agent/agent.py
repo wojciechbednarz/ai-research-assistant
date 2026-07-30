@@ -1,24 +1,26 @@
-from dotenv import load_dotenv
 import logging
-from config import get_settings
-from api import send_post_request
+
+from dotenv import load_dotenv
 from httpx import AsyncClient
-from agent.tools.definitions import TOOL_LIST
 from langfuse import observe
-from schemas import RespondResponse
+
+from agent.decorators import llm_retry
+from agent.llm_output_parser import (
+    json_parser,
+    parse_with_fallbacks,
+    regex_parser,
+)
 from agent.prompts import (
     ANALYZE_LLM_SYSTEM_PROMPT,
     ANALYZE_LLM_USER_PROMPT,
     RESPOND_LLM_SYSTEM_PROMPT,
     RESPOND_LLM_USER_PROMPT,
 )
+from agent.tools.definitions import TOOL_LIST
+from api import send_post_request
+from config import get_settings
 from helpers import truncate_to_budget
-from agent.decorators import llm_retry
-from agent.llm_output_parser import (
-    parse_with_fallbacks,
-    regex_parser,
-    json_parser,
-)
+from schemas import RespondResponse
 
 load_dotenv()
 
@@ -77,21 +79,31 @@ class Agent:
         return (messages + [message], message)
 
     def make_llm_parser(self):
-        """Factory function to create an LLM parser that sends the raw output back to the LLM for parsing."""
+        """Factory function to create an LLM parser that sends the raw output back to the LLM
+        for parsing.
+        """
 
         @llm_retry(max_retries=3)
         async def llm_parser(
             raw: str, model: str = get_settings().OPENROUTER_LLM_DEFAULT_MODEL
         ) -> dict:
-            """Sends the raw LLM output back to the LLM for parsing, with instructions to respond only with a JSON object."""
+            """Sends the raw LLM output back to the LLM for parsing, with instructions to
+            respond only with a JSON object.
+            """
             messages = [
                 {
                     "role": "system",
-                    "content": "You are a helpful assistant that extracts structured data from text. Respond ONLY with a JSON object.",
+                    "content": (
+                        "You are a helpful assistant that extracts structured data from "
+                        "text. Respond ONLY with a JSON object."
+                    ),
                 },
                 {
                     "role": "user",
-                    "content": f"Extract a valid JSON object from this text and return only the JSON: {raw}",
+                    "content": (
+                        f"Extract a valid JSON object from this text and return only "
+                        f"the JSON: {raw}"
+                    ),
                 },
             ]
             payload = {
