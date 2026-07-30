@@ -14,13 +14,14 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str | None = None
     OPENROUTER_LLM_DEFAULT_MODEL: str = "google/gemini-2.5-flash-lite"
     OPENROUTER_LLM_FALLBACK_MODEL: str = "google/gemini-2.5-flash"
+    OPENROUTER_API_V1: str = "https://openrouter.ai/api/v1"
     CHAT_COMPLETIONS_URL: str = "https://openrouter.ai/api/v1/chat/completions"
     LLM_ANALYZE_TEMPERATURE: float = 0.2
     LLM_RESPOND_TEMPERATURE: float = 0.0
     LLM_MAX_TOKENS: int = 3000
     FIRECRAWL_API_KEY: str | None = None
 
-    # LANGFUSE
+    # EVALS
     LANGFUSE_BASE_URL: str = "https://cloud.langfuse.com"
     LANGFUSE_SECRET_KEY: str
     LANGFUSE_PUBLIC_KEY: str
