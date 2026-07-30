@@ -6,6 +6,9 @@ from config import get_settings
 from langchain_openai import ChatOpenAI
 import asyncio
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
@@ -102,7 +105,7 @@ async def main():
         answer=our_llm_sample_answer,
         context=GROUNDED_SAMPLE["context"]
     )
-    print(faithfulness_grounded_sample)
+    logger.debug(faithfulness_grounded_sample)
     
     #####################################################
 
@@ -117,7 +120,7 @@ async def main():
         answer=our_llm_rag_answer,
         context=GROUNDED_RAG_TRIPLE["context"]
     )
-    print(faithfulness_rag_triple)
+    logger.debug(faithfulness_rag_triple)
 
 
 if __name__ == "__main__":
