@@ -1,9 +1,12 @@
+import logging
+
 from httpx import AsyncClient
+from pydantic import TypeAdapter, ValidationError
+
 from api import send_post_request
 from config import get_settings
-import logging
+
 from .load_golden import ExpectedClaim
-from pydantic import TypeAdapter, ValidationError
 
 settings = get_settings()
 logger = logging.getLogger(__name__)

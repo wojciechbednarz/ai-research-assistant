@@ -1,7 +1,8 @@
-from pathlib import Path
-from pydantic import BaseModel
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Literal
+
+from pydantic import BaseModel
 
 GOLDEN_SET_NAME = "golden_set.jsonl"
 GOLDEN_SET_FILE_PATH = Path(__file__).parent / GOLDEN_SET_NAME
@@ -23,7 +24,7 @@ class GoldenCase(BaseModel):
 
 
 def read_file(file_path) -> Iterator[GoldenCase]:
-    with open(file_path, "r", encoding="UTF-8") as file:
+    with open(file_path, encoding="UTF-8") as file:
         for line in file:
             if line.strip():
                 yield GoldenCase.model_validate_json(line)

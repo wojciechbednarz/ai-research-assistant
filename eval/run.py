@@ -1,9 +1,11 @@
-from eval.load_golden import read_file, GOLDEN_SET_FILE_PATH
-from eval.faithfulness import score_faithfulness
-from httpx import AsyncClient
-from config import get_settings
-import logging
 import asyncio
+import logging
+
+from httpx import AsyncClient
+
+from config import get_settings
+from eval.faithfulness import score_faithfulness
+from eval.load_golden import GOLDEN_SET_FILE_PATH, read_file
 
 s = get_settings()
 
