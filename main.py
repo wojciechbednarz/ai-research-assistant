@@ -109,28 +109,6 @@ async def get_collection_count(request: Request) -> int:
     return await asyncio.to_thread(chroma_db.count_collection, collection.name)
 
 
-@app.get("/research/approval")
-async def research_with_approval(
-    request: Request, query: str = Query(..., min_length=1, max_length=500)
-) -> RespondResponse | dict:
-    """Main research function that queries the vector database."""
-    cache = request.app.state.response_cache
-    cached = cache.get(query)
-    if cached:
-        return cached
-    query_result = await run_graph(query, request.app.state.compiled_graph, require_approval=True)
-    if query_result.get("__interrupt__"):
-        return {
-            "status": "awaiting_approval",
-            "thread_id": 1,
-            "prompt": query_result["__interrupt__"][0].value,
-        }
-    answer = query_result["answer"]
-    async with request.app.state.cache_lock:
-        cache[query] = answer
-    return answer
-
-
 @app.get("/research")
 async def research(
     request: Request, query: str = Query(..., min_length=1, max_length=500)
@@ -141,7 +119,12 @@ async def research(
     if cached:
         return cached
     query_result = await run_graph(query, request.app.state.compiled_graph)
-    logger.debug(f"QUERY RESULT DEBUG: {query_result}")
+    if query_result.get("__interrupt__"):
+        return {
+            "status": "awaiting_approval",
+            "thread_id": 1,
+            "prompt": query_result["__interrupt__"][0].value,
+        }
     answer = query_result["answer"]
     async with request.app.state.cache_lock:
         cache[query] = answer

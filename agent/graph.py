@@ -142,7 +142,7 @@ class NodeHandler:
                 max_iter,
                 state["question"],
             )
-        return  "approve" if state.get("require_approval") else "respond"
+        return "respond"
 
     async def route_after_approval(self, state: AgentState) -> str:
         return "respond" if state.get("approved") else "abort"
@@ -161,7 +161,7 @@ def build_graph(collection: Collection, client: AsyncClient) -> CompiledStateGra
     graph.add_conditional_edges(
         "analyze",
         node_handler.route_after_analyze,
-        {"retrieve": "retrieve", "respond": "approve", "respond": "respond"},
+        {"retrieve": "retrieve", "respond": "approve"},
     )
     graph.add_conditional_edges(
         "approve",
@@ -175,7 +175,7 @@ def build_graph(collection: Collection, client: AsyncClient) -> CompiledStateGra
 
 
 @observe(capture_input=False)
-async def run_graph(question: str, compiled_graph: CompiledStateGraph, require_approval: bool = False) -> dict:
+async def run_graph(question: str, compiled_graph: CompiledStateGraph) -> dict:
     config: RunnableConfig = {"configurable": {"thread_id": 1}}
     state = await compiled_graph.aget_state(config)
     logger.debug(
@@ -189,7 +189,6 @@ async def run_graph(question: str, compiled_graph: CompiledStateGraph, require_a
             "messages": [],
             "tool_trace": [],
             "tool_iterations": 0,
-            "require_approval": require_approval
         },
         config=config,
     )

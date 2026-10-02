@@ -52,25 +52,27 @@ ANSWER:
 {answer}
 """
 
+
 async def score_faithfulness(row, client: AsyncClient) -> float | None:
     messages = [
-                    {"role": "system", "content": FAITHFULNESS_SYSTEM_PROMPT},
-                    {
-                        "role": "user",
-                        "content": FAITHFULNESS_USER_PROMPT.format(
-                            context="\n\n".join(item.document for item in row.retrieved_context), answer=row.generated_answer
-                        ),
-                    },
-                ]
+        {"role": "system", "content": FAITHFULNESS_SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": FAITHFULNESS_USER_PROMPT.format(
+                context="\n\n".join(item.document for item in row.retrieved_context),
+                answer=row.generated_answer,
+            ),
+        },
+    ]
     payload = {
-                "model": settings.OPENROUTER_LLM_DEFAULT_MODEL,
-                "messages": messages,
-                "temperature": 0,
-                "max_tokens": get_settings().LLM_MAX_TOKENS,
-            }
+        "model": settings.OPENROUTER_LLM_DEFAULT_MODEL,
+        "messages": messages,
+        "temperature": 0,
+        "max_tokens": get_settings().LLM_MAX_TOKENS,
+    }
     response = await send_post_request(
-                client=client, url=get_settings().CHAT_COMPLETIONS_URL, payload=payload
-            )
+        client=client, url=get_settings().CHAT_COMPLETIONS_URL, payload=payload
+    )
     content = response["choices"][0]["message"]["content"]
     try:
         if content is None:
@@ -88,5 +90,5 @@ async def score_faithfulness(row, client: AsyncClient) -> float | None:
         return faithfulness_score
 
     except ValidationError as exc:
-        logger.error(f"Provided content should be convertable to JSON format and it is not: {content}. Error: {exc}")
+        logger.error("Judge reply is not a valid claim list: %s. Error: %s", content, exc)
         raise

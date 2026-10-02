@@ -12,9 +12,11 @@ class RetrievedDoc(BaseModel):
     id: str
     document: str
 
+
 class ExpectedClaim(BaseModel):
     claim: str
     mark: Literal["S", "U"]
+
 
 class GoldenCase(BaseModel):
     question: str
@@ -30,9 +32,7 @@ def read_file(file_path) -> Iterator[GoldenCase]:
                 yield GoldenCase.model_validate_json(line)
 
 
-
 if __name__ == "__main__":
-
     for line in read_file(GOLDEN_SET_FILE_PATH):
         question = line.question
         expected_claims = line.expected_claims
