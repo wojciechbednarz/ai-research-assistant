@@ -2,7 +2,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 GOLDEN_SET_NAME = "golden_set.jsonl"
 GOLDEN_SET_FILE_PATH = Path(__file__).parent / GOLDEN_SET_NAME
@@ -12,18 +12,22 @@ class RetrievedDoc(BaseModel):
     id: str
     document: str
 
+    model_config: ConfigDict = ConfigDict(extra="forbid")
 
 class ExpectedClaim(BaseModel):
     claim: str
     mark: Literal["S", "U"]
 
+    model_config: ConfigDict = ConfigDict(extra="forbid")
 
 class GoldenCase(BaseModel):
     question: str
+    id: str
     retrieved_context: list[RetrievedDoc]
     generated_answer: str
     expected_claims: list[ExpectedClaim]
 
+    model_config: ConfigDict = ConfigDict(extra="forbid")
 
 def read_file(file_path) -> Iterator[GoldenCase]:
     with open(file_path, encoding="UTF-8") as file:

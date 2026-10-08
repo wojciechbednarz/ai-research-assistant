@@ -1,0 +1,44 @@
+[
+    {
+        "question": "What is RAG?",
+        "id": "rag-definition-weak",
+        "expected": 0.333,
+        "score": 0.5
+    },
+    {
+        "question": "What is RAG?",
+        "id": "rag-definition-good",
+        "expected": 1.0,
+        "score": 1.0
+    },
+    {
+        "question": "What is cosine similarity?",
+        "id": "cosine-similarity",
+        "expected": 1.0,
+        "score": 1.0
+    },
+    {
+        "question": "What chunking strategies exist for RAG?",
+        "id": "chunking-strategies",
+        "expected": 1.0,
+        "score": 1.0
+    },
+    {
+        "question": "What are common RAG failure modes?",
+        "id": "rag-failure-modes",
+        "expected": 1.0,
+        "score": 1.0
+    },
+    {
+        "question": "What does the RAGAS framework measure?",
+        "id": "ragas-framework",
+        "expected": 1.0,
+        "score": 1.0
+    },
+    {
+        "question": "What is hybrid search in RAG?",
+        "id": "rag-hybrid-search",
+        "expected": 1.0,
+        "score": 1.0
+    }
+]

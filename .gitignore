@@ -32,3 +32,6 @@ checkpoints.db-wal
 
 # Devcontainers
 .devcontainer/
+
+# Temporary file
+tmp/
