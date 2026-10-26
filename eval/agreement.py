@@ -1,6 +1,7 @@
 from pathlib import Path
 from dataclasses import dataclass
 import json
+import argparse
 
 BASELINE = "baseline.json"
 BASELINE_FILE_PATH = Path(__file__).parent / BASELINE
@@ -62,6 +63,18 @@ def summarise(rows: list[EvalData], tol: float) -> dict:
     }
 
 if __name__ == "__main__":
-    tol = 0.1
-    rows = load_rows(BASELINE_FILE_PATH)
-    print(summarise(rows, tol))
+    # tol = 0.1
+    # rows = load_rows(BASELINE_FILE_PATH)
+    # print(summarise(rows, tol))
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("file_path", type=Path, default=BASELINE_FILE_PATH)
+    parser.add_argument("--tol", type=float, default=0.1)
+    args = parser.parse_args()
+
+    rows = load_rows(args.file_path)
+    summary = summarise(rows, args.tol)
+
+    for row_id in summary["disagreements"]:
+        print(f"DISAGREE: {row_id}")
+    print(f"AGREE: {summary["agree"]}, MAE {summary["mae"]:.3f} TOLERANCE: {args.tol}")
